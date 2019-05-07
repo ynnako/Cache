@@ -8,7 +8,7 @@ Block::Block() {
 	tag_ = 0xffffffff;
 	lruState_ = 0;
 	valid_ = false;
-	dirty_ = true;
+	dirty_ = false;
 }
 
 unsigned long int Block::getTag() const {

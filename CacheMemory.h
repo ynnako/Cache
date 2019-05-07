@@ -11,35 +11,31 @@
 using namespace std;
 class CacheMemory {
 private:
-	unsigned int blockSize_;
-	unsigned int cacheSize_;
+	unsigned int logBlockSize_;
+	unsigned int logCacheSize_;
 	unsigned int latency_;
+	unsigned int logNumOfWays_;
 	unsigned int numOfWays_;
-	unsigned int cacheLevel_;
-	unsigned int lowerMemLatency_;
-	bool isWriteAllocate_;
-	CacheMemory* lowerCache_;
-	Block** cacheTable;
+	unsigned int numOfBlocks_;
+	unsigned int numOfSets_;
+	Block **cacheTable;
 
 
 public:
-	CacheMemory(unsigned int blockSize, unsigned int cacheSize, unsigned int latency,
-					unsigned int numOfWays, unsigned int isWriteAllocate, unsigned int mainMemLatency);
-	CacheMemory(unsigned int blockSizeL1, unsigned int cacheSizeL1, unsigned int latencyL1, unsigned int numOfWaysL1,
-					unsigned int isWriteAllocateL1, unsigned int blockSizeL2, unsigned int cacheSizeL2,
-					unsigned int latencyL2, unsigned int numOfWaysL2, unsigned int isWriteAllocateL2,
-					unsigned int mainMemLatency);
+	CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, unsigned int logNumOfWays);
+	CacheMemory();
 	~CacheMemory();
-	unsigned int writeBlockToCache(unsigned int tag);
-	unsigned int readBlock(unsigned long int tag, bool &hit, unsigned long int &snoopTag);
+	unsigned int getLatency() const;
 	unsigned long int getSetIdx(unsigned long int tag);
-	bool cacheHit(unsigned long int tag , int &wayIdx , int &setIdx);
-	unsigned long locateVictimBlock(unsigned long int tag, unsigned long int &victimTag, int &wayIdx, int &setIdx,
-										bool &isDirty);
-	void removeBlockFromCache(unsigned long int tag);
 	void updateLru(int wayIdx, int setIdx);
-	void addBlockToCache(int wayIdx, int setIdx);
-	bool snoop(unsigned int tag);
+	void updateBlock(unsigned long int tag , int wayIdx, int setIdx);
+	void writeBlock(unsigned long int tag , int wayIdx, int setIdx);
+	bool isBlockInCache(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx);
+	unsigned long int locateVictimBlock(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx, bool &isDirty,
+											bool &isValid);
+	bool isBlockDirty(int wayIdx , int setIdx);
+
+
 
 
 

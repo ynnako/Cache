@@ -2,6 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "CacheMemory.h"
+#include "VictimCache.h"
+#include "CpuSim.h"
 
 
 using std::string;
@@ -62,9 +65,14 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	CpuSim *cpu = new CpuSim(BSize,  L1Size, L1Assoc, BSize, L2Size, L2Assoc, WrAlloc, VicCache);
+	int numOfMemAccess[MAX_MEMORY_LEVELS] = {0} , numOfMisses[2] = {0} ;
+	unsigned int latenciesArray[MAX_MEMORY_LEVELS] = {L1Cyc , L2Cyc , 1 ,MemCyc};
+	double totalNumOfMemAccess = 0 , totalLatency = 0;
 
 	while (getline(file, line))
 	{
+		totalNumOfMemAccess++;
 		stringstream ss(line);
 		string address;
 		char operation = 0; // read (R) or write (W)
@@ -87,13 +95,22 @@ int main(int argc, char *argv[]) {
 
 		// DEBUG - remove this line
 		cout << " (dec) " << num << endl;
+		if(operation == 'r') cpu->read(num);
+		cpu->getAccessAmount(numOfMemAccess, numOfMisses);
+		cpu->resetAccessAmount();
 	}
 
-	double L1MissRate =5 , L2MissRate =5 , avgAccTime = 3;
+	for(int i = 0 ; i < MAX_MEMORY_LEVELS ; i++){
+		totalLatency += latenciesArray[i]*numOfMemAccess[i];
+	}
+
+	double L1MissRate =numOfMisses[0] , L2MissRate =numOfMisses[1] , avgAccTime = 3;
+			avgAccTime = totalLatency / totalNumOfMemAccess;
 	printf("L1miss=%.03f ", L1MissRate );
 	printf("L2miss=%.03f ", L2MissRate);
 	printf("AccTimeAvg=%.03f\n", avgAccTime);
 
+	delete cpu;
 	return 0;
 }
 
