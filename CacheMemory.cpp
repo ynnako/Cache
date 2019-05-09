@@ -27,19 +27,15 @@ CacheMemory::~CacheMemory() {
 	delete[] cacheTable;
 }
 
-unsigned int CacheMemory::getLatency() const {
-	return latency_;
-}
 
 unsigned long int CacheMemory::getSetIdx(unsigned long int tag) {
 	unsigned long int setMask = numOfSets_ - 1;
-
 	return (tag >> logBlockSize_) & setMask;
 }
 
-void CacheMemory::updateLru(int wayIdx, int setIdx) {
-	int lruState = cacheTable[wayIdx][setIdx].getLruState();
-	int maxLruState = numOfWays_ - 1;
+void CacheMemory::updateLru(unsigned long int wayIdx, unsigned long int setIdx) {
+	unsigned long int lruState = cacheTable[wayIdx][setIdx].getLruState();
+	unsigned long int maxLruState = numOfWays_ - 1;
 		cacheTable[wayIdx][setIdx].setLruState(maxLruState);
 		for(int i = 0 ; i < numOfWays_ ; i++){
 			if(i != wayIdx && cacheTable[i][setIdx].getLruState() > lruState){
@@ -48,22 +44,25 @@ void CacheMemory::updateLru(int wayIdx, int setIdx) {
 			}
 }
 
-void CacheMemory::updateBlock(unsigned long int tag, int wayIdx, int setIdx) {
-	cacheTable[wayIdx][setIdx].setTag(tag);
-	cacheTable[wayIdx][setIdx].setDirty(true);
+void CacheMemory::updateBlock(unsigned long int tag, unsigned long int wayIdx, unsigned long int setIdx, bool isDirty) {
+	cacheTable[wayIdx][setIdx].setTag(makeEffectiveTag(tag));
+	cacheTable[wayIdx][setIdx].setDirty(isDirty);
 	cacheTable[wayIdx][setIdx].setValid(true);
+	cacheTable[wayIdx][setIdx].setSetIdx(setIdx);
 }
 
-void CacheMemory::writeBlock(unsigned long int tag, int wayIdx, int setIdx) {
-	cacheTable[wayIdx][setIdx].setTag(tag);
+void CacheMemory::writeBlock(unsigned long int tag, unsigned long int wayIdx, unsigned long int setIdx) {
+	cacheTable[wayIdx][setIdx].setTag(makeEffectiveTag(tag));
 	cacheTable[wayIdx][setIdx].setDirty(false);
 	cacheTable[wayIdx][setIdx].setValid(true);
+	cacheTable[wayIdx][setIdx].setSetIdx(setIdx);
 }
 
 bool CacheMemory::isBlockInCache(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx) {
+	unsigned long int tmpTag = makeEffectiveTag(tag);
 	setIdx = getSetIdx(tag);
-	for(int i = 0 ; i < numOfWays_ ; i++){
-		if(cacheTable[i][setIdx].getValid() && cacheTable[i][setIdx].getTag() == tag){
+	for(unsigned long int i = 0 ; i < numOfWays_ ; i++){
+		if(cacheTable[i][setIdx].getValid() && cacheTable[i][setIdx].getTag() == tmpTag && cacheTable[i][setIdx].getSetIdx() == setIdx){
 			wayIdx = i;
 			return true;
 		}
@@ -72,22 +71,22 @@ bool CacheMemory::isBlockInCache(unsigned long int tag, unsigned long &wayIdx, u
 }
 
 unsigned long int
-CacheMemory::locateVictimBlock(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx, bool &isDirty,
+CacheMemory::selectVictimBlock(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx, bool &isDirty,
 							   bool &isValid) {
 	unsigned long int victimTag;
 	setIdx = getSetIdx(tag);
-	for(int i = 0 ; i < numOfWays_ ; i++){
+	for(unsigned long int i = 0 ; i < numOfWays_ ; i++){
 		if(!cacheTable[i][setIdx].getValid()){
 			wayIdx = i;
-			victimTag = cacheTable[i][setIdx].getTag();
+			victimTag = 0xfffffffff;
 			isValid = false;
 			return victimTag;
 		}
 	}
-	for(int i = 0 ; i < numOfWays_ ; i++){
+	for(unsigned long int i = 0 ; i < numOfWays_ ; i++){
 		if(cacheTable[i][setIdx].getLruState() == 0){
 			wayIdx = i;
-			victimTag = cacheTable[i][setIdx].getTag();
+			victimTag = restoreTag(cacheTable[i][setIdx].getTag() , setIdx);
 			isValid = true;
 			return victimTag;
 		}
@@ -100,8 +99,30 @@ CacheMemory::CacheMemory() {
 
 }
 
-bool CacheMemory::isBlockDirty(int wayIdx, int setIdx) {
+bool CacheMemory::isBlockDirty(unsigned long int wayIdx, unsigned long int setIdx) {
 	return cacheTable[wayIdx][setIdx].getDirty();
+}
+
+const Block & CacheMemory::getBlock(unsigned long wayIdx, unsigned long setIdx) const {
+	return cacheTable[wayIdx][setIdx];
+}
+
+void CacheMemory::setBlock(const Block &memBlock, unsigned long wayIdx, unsigned long setIdx) {
+	cacheTable[wayIdx][setIdx] = memBlock;
+}
+
+void CacheMemory::invalidateBlock(unsigned long wayIdx, unsigned long setIdx) {
+	cacheTable[wayIdx][setIdx].setValid(false);
+}
+
+unsigned long CacheMemory::makeEffectiveTag(unsigned long int tag) {
+	unsigned long int tmpTag = tag >>(logNumOfWays_ + logBlockSize_);
+	return tmpTag;
+}
+
+unsigned long int CacheMemory::restoreTag(unsigned long int effectiveTag, unsigned long int setIdx) {
+	unsigned long int tmpTag = ((effectiveTag << logNumOfWays_) + setIdx ) << logBlockSize_;
+	return tmpTag;
 }
 
 

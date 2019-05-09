@@ -26,7 +26,7 @@ public:
 	void resetAccessAmount();
 	void read(unsigned long int tag);
 	void write(unsigned long int tag);
-	void setDirty(unsigned long int tag , bool isDirty);
+	void setDirty(unsigned long int tag, int level);
 
 };
 

@@ -19,11 +19,11 @@ void Block::setTag(unsigned long int tag) {
 	tag_ = tag;
 }
 
-int Block::getLruState() const {
+unsigned long int Block::getLruState() const {
 	return lruState_;
 }
 
-void Block::setLruState(int lruState) {
+void Block::setLruState(unsigned long int lruState) {
 	lruState_ = lruState;
 }
 
@@ -44,10 +44,27 @@ void Block::setDirty(bool dirty) {
 }
 
 void Block::initBlock(unsigned long int tag, bool isDirty, int numOfWays) {
+
 	tag_ = tag;
 	valid_ = true;
 	dirty_ = isDirty;
 	lruState_ = (1 << numOfWays) - 1;
+}
+
+//Block &Block::operator =(Block const& rhs) {
+//	dirty_ = rhs.dirty_;
+//	valid_ = rhs.valid_;
+//	tag_ = rhs.tag_;
+//
+//	return *this;
+//}
+
+void Block::setSetIdx(unsigned long int set) {
+	set_ = set;
+}
+
+unsigned long int Block::getSetIdx() const {
+	return set_;
 }
 
 

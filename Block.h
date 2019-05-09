@@ -9,7 +9,8 @@
 class Block {
 private:
 	unsigned long int tag_;
-	int lruState_;
+	unsigned long int set_;
+	unsigned long int lruState_;
 	bool valid_;
 	bool dirty_;
 
@@ -17,13 +18,16 @@ public:
 	Block();
 	unsigned long int getTag()const;
 	void setTag(unsigned long int tag);
-	int getLruState()const;
-	void setLruState(int lruState);
+	unsigned long int getLruState()const;
+	void setLruState(unsigned long int lruState);
 	bool getValid() const;
 	void setValid(bool valid);
 	bool getDirty() const;
 	void setDirty(bool dirty);
 	void initBlock(unsigned long int tag, bool isDirty, int numOfWays);
+	void setSetIdx(unsigned long int set);
+	unsigned long int getSetIdx()const;
+//	Block& operator = (Block const& rhs);
 
 
 
