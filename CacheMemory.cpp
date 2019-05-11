@@ -12,20 +12,20 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 	numOfWays_ = 1 << logNumOfWays;
 	numOfSets_ = 1 <<  (logCacheSize - logBlockSize - logNumOfWays);
 	setMask_ = logNumOfWays == 0 ? numOfBlocks_ - 1 :numOfSets_ - 1;
-//	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
-//	for(int i = 0 ; i < numOfWays_  ; i++)
-//	{
-//		cacheTable[i] = new Block[numOfSets_]; //allocate the number of lines
-//	}
+	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
+	for(int i = 0 ; i < numOfWays_  ; i++)
+	{
+		cacheTable[i] = new Block[numOfSets_]; //allocate the number of lines
+	}
 }
 
 
 CacheMemory::~CacheMemory() {
-//	for(int i = 0 ; i < (1 << logNumOfWays_)  ; i++)
-//	{
-//		delete[] cacheTable[i];
-//	}
-//	delete[] cacheTable;
+	for(int i = 0 ; i < (1 << logNumOfWays_)  ; i++)
+	{
+		delete[] cacheTable[i];
+	}
+	delete[] cacheTable;
 }
 
 

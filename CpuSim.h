@@ -22,7 +22,7 @@ public:
 			   unsigned int l2logBlockSize, unsigned int l2logCacheSize, unsigned int l2logNumOfWays,
 			   unsigned int isAllocate, unsigned int isVictimCache);
 	~CpuSim();
-	void getAccessAmount(int *accessArray, int *missArray) const;
+	void getAccessAmount(double *accessArray, double *missArray) const;
 	void resetAccessAmount();
 	void read(unsigned long int tag);
 	void write(unsigned long int tag);

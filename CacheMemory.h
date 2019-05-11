@@ -18,7 +18,7 @@ private:
 	unsigned int numOfBlocks_;
 	unsigned int numOfSets_;
 	unsigned int setMask_;
-	Block cacheTable[8][2];
+	Block **cacheTable;
 
 
 public:

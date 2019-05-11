@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	CpuSim *cpu = new CpuSim(BSize,  L1Size, L1Assoc, BSize, L2Size, L2Assoc, WrAlloc, VicCache);
-	int numOfMemAccess[MAX_MEMORY_LEVELS] = {0} , numOfMisses[2] = {0} ;
+	double numOfMemAccess[MAX_MEMORY_LEVELS] = {0} , numOfMisses[2] = {0} ;
 	unsigned int latenciesArray[MAX_MEMORY_LEVELS] = {L1Cyc , L2Cyc , VicCache ,MemCyc};
 	double totalNumOfMemAccess = 0 , totalLatency = 0;
 
@@ -84,19 +84,19 @@ int main(int argc, char *argv[]) {
 		}
 
 		// DEBUG - remove this line
-		cout << "operation: " << operation;
+		//cout << "operation: " << operation;
 
 		string cutAddress = address.substr(2); // Removing the "0x" part of the address
 
 		// DEBUG - remove this line
-		cout << ", address (hex)" << cutAddress;
+		//cout << ", address (hex)" << cutAddress;
 
 		unsigned long int num = 0;
 		num = strtoul(cutAddress.c_str(), NULL, 16);
 
 		// DEBUG - remove this line
-		cout << " (dec) " << num ;
-		std::cout << " (binary) " << std::bitset<32>(num) << endl;
+		//cout << " (dec) " << num ;
+		//cout << " (binary) " << std::bitset<32>(num) << endl;
 		if(operation == 'r') cpu->read(num);
 		else if(operation == 'w') cpu->write(num);
 		cpu->getAccessAmount(numOfMemAccess, numOfMisses);
@@ -107,9 +107,9 @@ int main(int argc, char *argv[]) {
 		totalLatency += latenciesArray[i]*numOfMemAccess[i];
 	}
 
-	double L1MissRate =numOfMisses[0] / totalNumOfMemAccess , L2MissRate = numOfMisses[1] / totalNumOfMemAccess , avgAccTime = totalLatency / totalNumOfMemAccess;
+	double L1MissRate =numOfMisses[0] / totalNumOfMemAccess , L2MissRate = numOfMisses[1] / numOfMisses[0] , avgAccTime = totalLatency / totalNumOfMemAccess;
 			avgAccTime = totalLatency / totalNumOfMemAccess;
-
+	//cout << "L1 misses: " << numOfMisses[0] << endl << "L2 misses: " << numOfMisses[1] << endl << "rate is: ";
 	printf("L1miss=%.03f ", L1MissRate );
 	printf("L2miss=%.03f ", L2MissRate);
 	printf("AccTimeAvg=%.03f\n", avgAccTime);

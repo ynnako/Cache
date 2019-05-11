@@ -30,7 +30,7 @@ CpuSim::~CpuSim() {
 	if(isVictimCache_) delete Vc;
 }
 
-void CpuSim::getAccessAmount(int *accessArray, int *missArray) const {
+void CpuSim::getAccessAmount(double *accessArray, double *missArray) const {
 	for(int i = 0 ; i < MAX_MEMORY_LEVELS ; i++)
 	{
 		if(i < 2){
@@ -96,24 +96,22 @@ void CpuSim::read(unsigned long int tag) {
 		accessArray_[1] = 1;
 		yVictim = l2->selectVictimBlock(tag, l2WayIdx, l2SetIdx, isDirtyL2, isValidL2);
 		if( isValidL2 && l1->isBlockInCache(yVictim ,l1WayIdx ,l1SetIdx)){
-			xVictim = yVictim;
 			if(l1->isBlockDirty(l1WayIdx , l1SetIdx)){
 				l2->updateBlock(yVictim, l2WayIdx, l2SetIdx, true);
 				l1->updateBlock(yVictim ,l1WayIdx , l2SetIdx , false);
+				l1->invalidateBlock(l1WayIdx , l1SetIdx);
 				//lruFlag = true;
 			}
 		}
-		else{
-			xVictim = l1->selectVictimBlock(tag, l1WayIdx, l1SetIdx, isDirtyL1, isValidL1);
-			if (isValidL1 && isDirtyL1) {
-				if(l2->isBlockInCache(xVictim, l2WayIdx2, l2SetIdx2)){
-					l2->updateBlock(xVictim, l2WayIdx2, l2SetIdx2, true);
-					l1->updateBlock(xVictim, l1WayIdx, l1SetIdx, false);
-					lruFlag = true;
-				}
-				else{
-					cerr << "ERROR, Memory not inclusive." << endl << "L2 - miss , L1 - Miss" << endl;
-				}
+		xVictim = l1->selectVictimBlock(tag, l1WayIdx, l1SetIdx, isDirtyL1, isValidL1);
+		if (isValidL1 && isDirtyL1) {
+			if(l2->isBlockInCache(xVictim, l2WayIdx2, l2SetIdx2)){
+				l2->updateBlock(xVictim, l2WayIdx2, l2SetIdx2, true);
+				l1->updateBlock(xVictim, l1WayIdx, l1SetIdx, false);
+				l2->updateLru(l2WayIdx2 , l2SetIdx2);
+			}
+			else{
+				cerr << "ERROR, Memory not inclusive." << endl << "L2 - miss , L1 - Miss" << endl;
 			}
 		}
 
@@ -139,9 +137,8 @@ void CpuSim::read(unsigned long int tag) {
 		l2->updateLru(l2WayIdx , l2SetIdx);
 		l1->updateBlock(tag, l1WayIdx, l1SetIdx, isDirtyVc);
 		l1->updateLru(l1WayIdx , l1SetIdx);
-		if(lruFlag){
-			l2->updateLru(l2WayIdx2 , l2SetIdx2);
-		}
+
+
 
 	}
 }
@@ -206,7 +203,7 @@ void CpuSim::setDirty(unsigned long int tag, int level) {
 				l1->updateLru(wayIdx, setIdx);
 			}
 			else{
-				cerr << "set dirty case 1 problematic" << endl;
+				cout << "set dirty case 1 problematic" << endl;
 			}
 			break;
 		case 2:
