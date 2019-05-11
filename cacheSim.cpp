@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <bitset>
 #include "CacheMemory.h"
 #include "VictimCache.h"
 #include "CpuSim.h"
@@ -94,7 +95,8 @@ int main(int argc, char *argv[]) {
 		num = strtoul(cutAddress.c_str(), NULL, 16);
 
 		// DEBUG - remove this line
-		cout << " (dec) " << num << endl;
+		cout << " (dec) " << num ;
+		std::cout << " (binary) " << std::bitset<32>(num) << endl;
 		if(operation == 'r') cpu->read(num);
 		else if(operation == 'w') cpu->write(num);
 		cpu->getAccessAmount(numOfMemAccess, numOfMisses);

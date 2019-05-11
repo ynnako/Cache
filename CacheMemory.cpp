@@ -11,26 +11,26 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 	numOfBlocks_ = 1 << (logCacheSize_ - logBlockSize);
 	numOfWays_ = 1 << logNumOfWays;
 	numOfSets_ = 1 <<  (logCacheSize - logBlockSize - logNumOfWays);
-	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
-	for(int i = 0 ; i < numOfWays_  ; i++)
-	{
-		cacheTable[i] = new Block[numOfSets_]; //allocate the number of lines
-	}
+	setMask_ = logNumOfWays == 0 ? numOfBlocks_ - 1 :numOfSets_ - 1;
+//	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
+//	for(int i = 0 ; i < numOfWays_  ; i++)
+//	{
+//		cacheTable[i] = new Block[numOfSets_]; //allocate the number of lines
+//	}
 }
 
 
 CacheMemory::~CacheMemory() {
-	for(int i = 0 ; i < (1 << logNumOfWays_)  ; i++)
-	{
-		delete[] cacheTable[i];
-	}
-	delete[] cacheTable;
+//	for(int i = 0 ; i < (1 << logNumOfWays_)  ; i++)
+//	{
+//		delete[] cacheTable[i];
+//	}
+//	delete[] cacheTable;
 }
 
 
 unsigned long int CacheMemory::getSetIdx(unsigned long int tag) {
-	unsigned long int setMask = numOfSets_ - 1;
-	return (tag >> logBlockSize_) & setMask;
+	return (tag >> logBlockSize_) & setMask_;
 }
 
 void CacheMemory::updateLru(unsigned long int wayIdx, unsigned long int setIdx) {
@@ -116,12 +116,14 @@ void CacheMemory::invalidateBlock(unsigned long wayIdx, unsigned long setIdx) {
 }
 
 unsigned long CacheMemory::makeEffectiveTag(unsigned long int tag) {
-	unsigned long int tmpTag = tag >>(logNumOfWays_ + logBlockSize_);
+	unsigned long int tmpTag = tag >> (logCacheSize_ - logNumOfWays_) ;
 	return tmpTag;
 }
 
 unsigned long int CacheMemory::restoreTag(unsigned long int effectiveTag, unsigned long int setIdx) {
-	unsigned long int tmpTag = ((effectiveTag << logNumOfWays_) + setIdx ) << logBlockSize_;
+	unsigned long int tmpTag = effectiveTag << (logCacheSize_ - logNumOfWays_);
+	tmpTag += setIdx;
+	tmpTag << logBlockSize_;
 	return tmpTag;
 }
 

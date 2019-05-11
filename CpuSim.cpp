@@ -54,7 +54,7 @@ void CpuSim::read(unsigned long int tag) {
 	unsigned long int l1WayIdx = 0 , l1SetIdx = 0 , l2WayIdx = 0 , l2SetIdx = 0 , l2WayIdx2 = 0 , l2SetIdx2 = 0 , yVictim , xVictim;
 	unsigned long int effectiveTagVc = l2->makeEffectiveTag(tag) , effectiveSet = l2->getSetIdx(tag);
 	unsigned long int fifoIdx = 0;
-	bool isDirtyL1 = false , isDirtyL2 = false , isDirtyVc = false , isValidL1 = false , isValidL2 = false;
+	bool isDirtyL1 = false , isDirtyL2 = false , isDirtyVc = false , isValidL1 = false , isValidL2 = false , lruFlag = false;
 	accessArray_[0] = 1;
 
 
@@ -74,7 +74,7 @@ void CpuSim::read(unsigned long int tag) {
 				l2->updateLru(l2WayIdx , l2SetIdx);
 			}
 			else{
-				cerr << "ERROR, Memory not inclusive." << endl << "L2 - hit , L1 - Miss" << endl;
+				cerr << "DEBUG - ERROR, Memory not inclusive." << endl << "L2 - hit , L1 - Miss" << endl;
 			}
 
 		}
@@ -100,7 +100,7 @@ void CpuSim::read(unsigned long int tag) {
 			if(l1->isBlockDirty(l1WayIdx , l1SetIdx)){
 				l2->updateBlock(yVictim, l2WayIdx, l2SetIdx, true);
 				l1->updateBlock(yVictim ,l1WayIdx , l2SetIdx , false);
-				//removed update LRU
+				//lruFlag = true;
 			}
 		}
 		else{
@@ -108,8 +108,8 @@ void CpuSim::read(unsigned long int tag) {
 			if (isValidL1 && isDirtyL1) {
 				if(l2->isBlockInCache(xVictim, l2WayIdx2, l2SetIdx2)){
 					l2->updateBlock(xVictim, l2WayIdx2, l2SetIdx2, true);
-					l2->updateLru(l2WayIdx2 , l2SetIdx2);
-					l1->updateBlock(xVictim, l2WayIdx2, l2SetIdx2, false);
+					l1->updateBlock(xVictim, l1WayIdx, l1SetIdx, false);
+					lruFlag = true;
 				}
 				else{
 					cerr << "ERROR, Memory not inclusive." << endl << "L2 - miss , L1 - Miss" << endl;
@@ -139,6 +139,9 @@ void CpuSim::read(unsigned long int tag) {
 		l2->updateLru(l2WayIdx , l2SetIdx);
 		l1->updateBlock(tag, l1WayIdx, l1SetIdx, isDirtyVc);
 		l1->updateLru(l1WayIdx , l1SetIdx);
+		if(lruFlag){
+			l2->updateLru(l2WayIdx2 , l2SetIdx2);
+		}
 
 	}
 }
@@ -198,17 +201,24 @@ void CpuSim::setDirty(unsigned long int tag, int level) {
 
 	switch(level){
 		case 1:
-			l1->isBlockInCache(tag , wayIdx , setIdx);
-			l1->updateBlock(tag, wayIdx, setIdx, true);
-			l1->updateLru(wayIdx , setIdx);
+			if(l1->isBlockInCache(tag , wayIdx , setIdx)) {
+				l1->updateBlock(tag, wayIdx, setIdx, true);
+				l1->updateLru(wayIdx, setIdx);
+			}
+			else{
+				cerr << "set dirty case 1 problematic" << endl;
+			}
+			break;
 		case 2:
 			l2->isBlockInCache(tag , wayIdx , setIdx);
 			l2->updateBlock(tag, wayIdx, setIdx, true);
 			l2->updateLru(wayIdx , setIdx);
+			break;
 		case 3:
 			if(isVictimCache_){
 				Vc->updateDirty(effectiveTagVc, effectiveSetVc);
 			}
+			break;
 		default:
 			break;
 	}
