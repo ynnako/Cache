@@ -71,7 +71,7 @@ void CpuSim::read(unsigned long int tag) {
 		if(isValidL1 && isDirtyL1){
 			if(l2->isBlockInCache(yVictim , l2WayIdx2 ,l2SetIdx2)){
 				l2->updateBlock(yVictim, l2WayIdx2, l2SetIdx2, true);
-				l2->updateLru(l2WayIdx , l2SetIdx);
+				l2->updateLru(l2WayIdx2 , l2SetIdx2);
 			}
 			else{
 				cerr << "DEBUG - ERROR, Memory not inclusive." << endl << "L2 - hit , L1 - Miss" << endl;
@@ -96,12 +96,11 @@ void CpuSim::read(unsigned long int tag) {
 		accessArray_[1] = 1;
 		yVictim = l2->selectVictimBlock(tag, l2WayIdx, l2SetIdx, isDirtyL2, isValidL2);
 		if( isValidL2 && l1->isBlockInCache(yVictim ,l1WayIdx ,l1SetIdx)){
-			if(l1->isBlockDirty(l1WayIdx , l1SetIdx)){
+			if(l1->isBlockDirty(l1WayIdx , l1SetIdx)) {
 				l2->updateBlock(yVictim, l2WayIdx, l2SetIdx, true);
-				l1->updateBlock(yVictim ,l1WayIdx , l2SetIdx , false);
-				l1->invalidateBlock(l1WayIdx , l1SetIdx);
-				//lruFlag = true;
+				l1->updateBlock(yVictim, l1WayIdx, l1SetIdx, false);
 			}
+			l1->invalidateBlock(l1WayIdx , l1SetIdx);
 		}
 		xVictim = l1->selectVictimBlock(tag, l1WayIdx, l1SetIdx, isDirtyL1, isValidL1);
 		if (isValidL1 && isDirtyL1) {
@@ -111,7 +110,8 @@ void CpuSim::read(unsigned long int tag) {
 				l2->updateLru(l2WayIdx2 , l2SetIdx2);
 			}
 			else{
-				cerr << "ERROR, Memory not inclusive." << endl << "L2 - miss , L1 - Miss" << endl;
+				//DEBUG
+				cout << "ERROR, Memory not inclusive." << endl << "L2 - miss , L1 - Miss" << endl;
 			}
 		}
 
@@ -123,9 +123,7 @@ void CpuSim::read(unsigned long int tag) {
 			else accessArray_[3] = 1;
 
 			if(isValidL2){ //move l2's victim into fifo
-				if(Vc->writeBlockToFifo(l2->getBlock(l2WayIdx, l2SetIdx))){
-					accessArray_[3] = 1;
-				}
+				Vc->writeBlockToFifo(l2->getBlock(l2WayIdx, l2SetIdx));
 			}
 
 		}
@@ -182,7 +180,7 @@ void CpuSim::write(unsigned long int tag) {
 		}
 		accessArray_[0] = 1;
 		accessArray_[1] = 1;
-		accessArray_[2] = 1;
+		accessArray_[2] = 0;
 		accessArray_[3] = 1;
 		missArray_[0] = 1;
 		missArray_[1] = 1;

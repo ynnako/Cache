@@ -68,6 +68,7 @@ void VictimCache::restoreBlock(unsigned long index, bool &isDirty) {
 	fifoFull_ = false;
 	isDirty = victimFifo_[index].getDirty();
 	updateBlockFifoIndex(victimFifo_[index].getLruState());
+	refreshQueue();
 }
 
 void VictimCache::updateDirty(unsigned long int tag, unsigned long int set) {
@@ -75,6 +76,16 @@ void VictimCache::updateDirty(unsigned long int tag, unsigned long int set) {
 	if(isBlockInFifo(tag, set, idx)){
 		victimFifo_[idx].setDirty(true);
 	}
+}
+
+void VictimCache::refreshQueue() {
+	for(int i = 0 ; i < FIFO_SIZE ; i++)
+	{
+		if(victimFifo_[i].getValid()){
+			victimFifo_[i].setLruState(victimFifo_[i].getLruState() - 1);
+		}
+	}
+
 }
 
 

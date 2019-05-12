@@ -25,7 +25,7 @@ CacheMemory::~CacheMemory() {
 	{
 		delete[] cacheTable[i];
 	}
-	delete[] cacheTable;
+//	delete[] cacheTable;
 }
 
 
@@ -87,6 +87,7 @@ CacheMemory::selectVictimBlock(unsigned long int tag, unsigned long &wayIdx, uns
 		if(cacheTable[i][setIdx].getLruState() == 0){
 			wayIdx = i;
 			victimTag = restoreTag(cacheTable[i][setIdx].getTag() , setIdx);
+			isDirty = cacheTable[i][setIdx].getDirty();
 			isValid = true;
 			return victimTag;
 		}
@@ -121,9 +122,9 @@ unsigned long CacheMemory::makeEffectiveTag(unsigned long int tag) {
 }
 
 unsigned long int CacheMemory::restoreTag(unsigned long int effectiveTag, unsigned long int setIdx) {
-	unsigned long int tmpTag = effectiveTag << (logCacheSize_ - logNumOfWays_);
+	unsigned long int tmpTag = effectiveTag << (logCacheSize_ - logNumOfWays_ - logBlockSize_);
 	tmpTag += setIdx;
-	tmpTag << logBlockSize_;
+	tmpTag = tmpTag << logBlockSize_;
 	return tmpTag;
 }
 
