@@ -31,7 +31,6 @@ public:
 	unsigned long int getSetIdx(unsigned long int tag);
 	void updateLru(unsigned long int wayIdx, unsigned long int setIdx);
 	void updateBlock(unsigned long int tag, unsigned long int wayIdx, unsigned long int setIdx, bool isDirty);
-	void writeBlock(unsigned long int tag , unsigned long int wayIdx, unsigned long int setIdx);
 	bool isBlockInCache(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx);
 	unsigned long int selectVictimBlock(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx,
 										bool &isDirty,

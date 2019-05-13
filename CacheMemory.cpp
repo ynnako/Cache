@@ -2,6 +2,7 @@
 // Created by Yonatan on 4/28/2019.
 //
 
+#include <iostream>
 #include "CacheMemory.h"
 
 CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, unsigned int logNumOfWays) {
@@ -11,7 +12,7 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 	numOfBlocks_ = 1 << (logCacheSize_ - logBlockSize);
 	numOfWays_ = 1 << logNumOfWays;
 	numOfSets_ = 1 <<  (logCacheSize - logBlockSize - logNumOfWays);
-	setMask_ = logNumOfWays == 0 ? numOfBlocks_ - 1 :numOfSets_ - 1;
+	setMask_ = numOfSets_ - 1;
 	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
 	for(int i = 0 ; i < numOfWays_  ; i++)
 	{
@@ -21,11 +22,11 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 
 
 CacheMemory::~CacheMemory() {
-	for(int i = 0 ; i < (1 << logNumOfWays_)  ; i++)
+	for(int i = 0 ; i < numOfWays_  ; i++)
 	{
 		delete[] cacheTable[i];
 	}
-//	delete[] cacheTable;
+	delete[] cacheTable;
 }
 
 
@@ -51,12 +52,6 @@ void CacheMemory::updateBlock(unsigned long int tag, unsigned long int wayIdx, u
 	cacheTable[wayIdx][setIdx].setSetIdx(setIdx);
 }
 
-void CacheMemory::writeBlock(unsigned long int tag, unsigned long int wayIdx, unsigned long int setIdx) {
-	cacheTable[wayIdx][setIdx].setTag(makeEffectiveTag(tag));
-	cacheTable[wayIdx][setIdx].setDirty(false);
-	cacheTable[wayIdx][setIdx].setValid(true);
-	cacheTable[wayIdx][setIdx].setSetIdx(setIdx);
-}
 
 bool CacheMemory::isBlockInCache(unsigned long int tag, unsigned long &wayIdx, unsigned long &setIdx) {
 	unsigned long int tmpTag = makeEffectiveTag(tag);
@@ -80,6 +75,7 @@ CacheMemory::selectVictimBlock(unsigned long int tag, unsigned long &wayIdx, uns
 			wayIdx = i;
 			victimTag = 0xfffffffff;
 			isValid = false;
+			isDirty = false;
 			return victimTag;
 		}
 	}
@@ -87,13 +83,15 @@ CacheMemory::selectVictimBlock(unsigned long int tag, unsigned long &wayIdx, uns
 		if(cacheTable[i][setIdx].getLruState() == 0){
 			wayIdx = i;
 			victimTag = restoreTag(cacheTable[i][setIdx].getTag() , setIdx);
-			isDirty = cacheTable[i][setIdx].getDirty();
 			isValid = true;
+			isDirty = cacheTable[i][setIdx].getDirty();
 			return victimTag;
 		}
 
 	}
 	return 0;
+	//DEBUG
+	cout<< "Error in finding victim " << endl;
 }
 
 CacheMemory::CacheMemory() {
@@ -114,6 +112,8 @@ void CacheMemory::setBlock(const Block &memBlock, unsigned long wayIdx, unsigned
 
 void CacheMemory::invalidateBlock(unsigned long wayIdx, unsigned long setIdx) {
 	cacheTable[wayIdx][setIdx].setValid(false);
+	cacheTable[wayIdx][setIdx].setDirty(false);
+	cacheTable[wayIdx][setIdx].setLruState(0);
 }
 
 unsigned long CacheMemory::makeEffectiveTag(unsigned long int tag) {

@@ -78,6 +78,7 @@ void CpuSim::read(unsigned long int tag) {
 			}
 
 		}
+		l1->invalidateBlock(l1WayIdx , l1SetIdx);
 		if(l2->isBlockDirty(l2WayIdx , l2SetIdx)){
 			l2->updateBlock(tag , l2WayIdx , l2SetIdx , false);
 			l1->updateBlock(tag , l1WayIdx , l1SetIdx , true);
@@ -107,7 +108,8 @@ void CpuSim::read(unsigned long int tag) {
 			if(l2->isBlockInCache(xVictim, l2WayIdx2, l2SetIdx2)){
 				l2->updateBlock(xVictim, l2WayIdx2, l2SetIdx2, true);
 				l1->updateBlock(xVictim, l1WayIdx, l1SetIdx, false);
-				l2->updateLru(l2WayIdx2 , l2SetIdx2);
+				lruFlag = true;
+
 			}
 			else{
 				//DEBUG
@@ -130,9 +132,14 @@ void CpuSim::read(unsigned long int tag) {
 		else {
 			accessArray_[3] = 1;
 		}
-
+		l2->invalidateBlock(l2WayIdx , l2SetIdx);
+		l1->invalidateBlock(l1WayIdx , l1SetIdx);
 		l2->updateBlock(tag , l2WayIdx , l2SetIdx , false);
+
 		l2->updateLru(l2WayIdx , l2SetIdx);
+		if(lruFlag){
+			l2->updateLru(l2WayIdx2 , l2SetIdx2);
+		}
 		l1->updateBlock(tag, l1WayIdx, l1SetIdx, isDirtyVc);
 		l1->updateLru(l1WayIdx , l1SetIdx);
 
