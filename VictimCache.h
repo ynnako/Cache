@@ -18,7 +18,7 @@ public:
 	bool isBlockInFifo(unsigned long int tag, unsigned long int set, unsigned long &tagIndexInFifo);
 	bool writeBlockToFifo(Block blockToFifo);
 	void restoreBlock(unsigned long index, bool &isDirty);
-	void updateDirty(unsigned long int tag, unsigned long int set);
+	void updateDirty(unsigned long int fifoIdx);
 	void refreshQueue();
 
 

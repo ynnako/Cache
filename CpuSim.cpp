@@ -154,12 +154,12 @@ void CpuSim::write(unsigned long int tag) {
 	unsigned long int fifoIdx = 0;
 	if(isWriteAllocate_){
 		read(tag);
-		setDirty(tag, 1);
+		setDirty(tag, 1, 0);
 	}
 	else {
 		if (l1->isBlockInCache(tag, wayIdx, setIdx)) {
 			accessArray_[0] = 1;
-			setDirty(tag, 1);
+			setDirty(tag, 1, 0);
 			l1->updateLru(wayIdx, setIdx);
 			return;
 		}
@@ -167,7 +167,7 @@ void CpuSim::write(unsigned long int tag) {
 			accessArray_[0] = 1;
 			accessArray_[1] = 1;
 			missArray_[0] = 1;
-			setDirty(tag, 2);
+			setDirty(tag, 2, 0);
 			l2->updateLru(wayIdx, setIdx);
 			return;
 		}
@@ -178,28 +178,30 @@ void CpuSim::write(unsigned long int tag) {
 			missArray_[0] = 1;
 			missArray_[1] = 1;
 			if (Vc->isBlockInFifo(effectiveTagVc, effectiveSetVc , fifoIdx)) {
-				setDirty(tag, 3);
+				setDirty(tag, 3, fifoIdx);
 			}
 			else {
 				accessArray_[3] = 1;
 			}
 			return;
 		}
-		accessArray_[0] = 1;
-		accessArray_[1] = 1;
-		accessArray_[2] = 0;
-		accessArray_[3] = 1;
-		missArray_[0] = 1;
-		missArray_[1] = 1;
+		else {
+			accessArray_[0] = 1;
+			accessArray_[1] = 1;
+			accessArray_[2] = 0;
+			accessArray_[3] = 1;
+			missArray_[0] = 1;
+			missArray_[1] = 1;
+		}
 
 	}
 
 
 }
 
-void CpuSim::setDirty(unsigned long int tag, int level) {
+void CpuSim::setDirty(unsigned long int tag, int level, unsigned long int fifoIdx) {
 	unsigned long int wayIdx = 0 , setIdx = 0;
-	unsigned long int effectiveTagVc = l2->makeEffectiveTag(tag) , effectiveSetVc = l2->getSetIdx(tag);
+	//unsigned long int effectiveTagVc = l2->makeEffectiveTag(tag) , effectiveSetVc = l2->getSetIdx(tag);
 
 	switch(level){
 		case 1:
@@ -218,7 +220,7 @@ void CpuSim::setDirty(unsigned long int tag, int level) {
 			break;
 		case 3:
 			if(isVictimCache_){
-				Vc->updateDirty(effectiveTagVc, effectiveSetVc);
+				Vc->updateDirty(fifoIdx);
 			}
 			break;
 		default:

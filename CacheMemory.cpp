@@ -14,7 +14,7 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 	numOfSets_ = 1 <<  (logCacheSize - logBlockSize - logNumOfWays);
 	setMask_ = numOfSets_ - 1;
 	cacheTable = new Block *[numOfWays_]; // the number of ways will determine the size of the first degree
-	for(int i = 0 ; i < numOfWays_  ; i++)
+	for(unsigned int i = 0 ; i < numOfWays_  ; i++)
 	{
 		cacheTable[i] = new Block[numOfSets_]; //allocate the number of lines
 	}
@@ -22,7 +22,7 @@ CacheMemory::CacheMemory(unsigned int logBlockSize, unsigned int logCacheSize, u
 
 
 CacheMemory::~CacheMemory() {
-	for(int i = 0 ; i < numOfWays_  ; i++)
+	for(unsigned int i = 0 ; i < numOfWays_  ; i++)
 	{
 		delete[] cacheTable[i];
 	}
@@ -38,7 +38,7 @@ void CacheMemory::updateLru(unsigned long int wayIdx, unsigned long int setIdx) 
 	unsigned long int lruState = cacheTable[wayIdx][setIdx].getLruState();
 	unsigned long int maxLruState = numOfWays_ - 1;
 		cacheTable[wayIdx][setIdx].setLruState(maxLruState);
-		for(int i = 0 ; i < numOfWays_ ; i++){
+		for(unsigned int i = 0 ; i < numOfWays_ ; i++){
 			if(i != wayIdx && cacheTable[i][setIdx].getLruState() > lruState){
 						cacheTable[i][setIdx].setLruState(cacheTable[i][setIdx].getLruState() - 1);
 					}

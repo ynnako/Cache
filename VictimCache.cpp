@@ -71,11 +71,9 @@ void VictimCache::restoreBlock(unsigned long index, bool &isDirty) {
 	refreshQueue();
 }
 
-void VictimCache::updateDirty(unsigned long int tag, unsigned long int set) {
-	unsigned long int idx = 0;
-	if(isBlockInFifo(tag, set, idx)){
-		victimFifo_[idx].setDirty(true);
-	}
+void VictimCache::updateDirty(unsigned long int fifoIdx) {
+
+		victimFifo_[fifoIdx].setDirty(true);
 }
 
 void VictimCache::refreshQueue() {
